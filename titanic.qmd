@@ -15,6 +15,7 @@ library(kknn)
 ```
 
 ## Loading and inspecting the dataset
+
 ```{r}
 data("titanic_train")
 data("titanic_test")
@@ -33,6 +34,7 @@ summary(titanic_train)
 ## Visualizations of the dataset
 
 **Example 1: Bar plot of passenger survival**
+
 ```{r}
 titanic_train %>%
   ggplot(aes(x = factor(Survived))) +
@@ -43,6 +45,7 @@ titanic_train %>%
 ```
 
 **Example 2: Bar plot of passenger class distribution**
+
 ```{r}
 titanic_train %>%
   ggplot(aes(x = factor(Pclass))) +
@@ -53,6 +56,7 @@ titanic_train %>%
 ```
 
 **Example 3: Box plot of passenger age by class and survival**
+
 ```{r}
 titanic_train %>%
   ggplot(aes(x = factor(Pclass), y = Age, fill = factor(Survived))) +
@@ -64,6 +68,7 @@ titanic_train %>%
 ```
 
 **Example 4: Box plot of passenger age by sex, class, and survival**
+
 ```{r}
 titanic_train %>%
   ggplot(aes(x = factor(Pclass), y = Age, fill = factor(Survived))) +
@@ -76,6 +81,7 @@ titanic_train %>%
 ```
 
 **Example 5: Stacked bar plot of passenger count by sex, class, and survival**
+
 ```{r}
 titanic_train %>%
   ggplot(aes(x = factor(Pclass), fill = factor(Survived))) +
@@ -88,8 +94,11 @@ titanic_train %>%
 ```
 
 ## Machine learning models
+
 ### Generalized linear model
+
 **1: Data preparation**
+
 ```{r}
 # Handle missing values
 titanic_train$Age[is.na(titanic_train$Age)] <- median(titanic_train$Age, na.rm = TRUE)
@@ -107,6 +116,7 @@ validation_data <- titanic_train[-train_indices, ]
 ```
 
 **2: Fit the GLM**
+
 ```{r}
 # Fit the generalized linear model
 glm_model <- glm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
@@ -118,6 +128,7 @@ summary(glm_model)
 ```
 
 **3: Evaluate the model**
+
 ```{r}
 # Predict on the validation set
 validation_data$predicted_prob <- predict(glm_model, validation_data, type = "response")
@@ -129,6 +140,7 @@ accuracy
 ```
 
 **4: Confusion matrix visualization**
+
 ```{r}
 # Create confusion matrix
 confusion_matrix <- confusionMatrix(as.factor(validation_data$predicted_class), as.factor(validation_data$Survived))
@@ -147,6 +159,7 @@ cm_plot
 ```
 
 **5:ROC curve visualization**
+
 ```{r}
 # Calculate the ROC curve
 roc_obj <- roc(validation_data$Survived, validation_data$predicted_prob)
@@ -161,65 +174,79 @@ roc_plot <- ggroc(roc_obj, legacy.axes = TRUE) +
 roc_plot
 ```
 
-include=FALSE
-### k-Nearest Neighbours (k-NN)
+<!-- ### k-Nearest Neighbours (k-NN) -->
 
-**1: Fit the model**
-```{r}
-# Scale and center the predictors
-train_scaled <- scale(train_data[, c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")])
-validation_scaled <- scale(validation_data[, c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")], center = attr(train_scaled, "scaled:center"), scale = attr(train_scaled, "scaled:scale"))
+<!-- **1: Fit the model** -->
 
-# Fit the k-NN model
-knn_model <- kknn(Survived ~ ., data.frame(Survived = train_data$Survived, train_scaled), k = 5)
+<!-- ```{r} -->
+<!-- # Scale and center the predictors -->
+<!-- train_scaled <- scale(train_data[, c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")]) -->
+<!-- validation_scaled <- scale(validation_data[, c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")], center = attr(train_scaled, "scaled:center"), scale = attr(train_scaled, "scaled:scale")) -->
 
-# Display the model summary
-summary(knn_model)
+<!-- # Create data frames with named columns for the scaled training and test data -->
+<!-- train_scaled_df <- data.frame(Survived = train_data$Survived, train_scaled) -->
+<!-- colnames(train_scaled_df) <- c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked") -->
 
+<!-- validation_scaled_df <- data.frame(Survived = validation_data$Survived, validation_scaled) -->
+<!-- colnames(validation_scaled_df) <- c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked") -->
 
-```
+<!-- ``` -->
 
-**2: Make predictions and calculate accuracy**
-```{r}
-# Make predictions on the validation set
-validation_data$predicted_knn_prob <- predict(knn_model, newdata = data.frame(validation_scaled), type = "prob")[, 2]
-validation_data$predicted_knn_class <- ifelse(validation_data$predicted_knn_prob > 0.5, 1, 0)
+<!-- ```{r} -->
 
 
-# Calculate accuracy
-accuracy_knn <- mean(validation_data$predicted_class_knn == validation_data$Survived)
-accuracy_knn
-```
+<!-- # Fit the k-NN model -->
+<!-- k <- 10 -->
+<!-- knn_model <- caret::knn3(Survived ~ ., data = train_scaled_df, k = k) -->
 
-**3: Confusion Matrix**
-```{r}
-# Create confusion matrix for k-NN model
-confusion_matrix_knn <- confusionMatrix(as.factor(validation_data$predicted_class_knn), as.factor(validation_data$Survived))
+<!-- # Display the model summary -->
+<!-- summary(knn_model) -->
 
-# Visualize the confusion matrix
-cm_plot_knn <- ggplot(data = as.data.frame(confusion_matrix_knn$table), aes(x = Reference, y = Prediction)) +
-  geom_tile(aes(fill = log(Freq)), color = "white") +
-  geom_text(aes(label = Freq), color = "white", fontface = "bold", size = 15) +
-  scale_fill_gradient(low = "blue", high = "red") +
-  theme_minimal() +
-  theme(axis.title = element_text(size = 12),
-        axis.text = element_text(size = 10)) +
-  labs(x = "Actual", y = "Predicted", fill = "Log Frequency", title = "Confusion Matrix (k-NN)")
+<!-- ``` -->
 
-cm_plot_knn
-```
+<!-- **2: Make predictions and calculate accuracy** -->
 
-**4: ROC curve**
-```{r}
-# Calculate the ROC curve for k-NN
-roc_obj_knn <- roc(validation_data$Survived, validation_data$predicted_prob_knn)
+<!-- ```{r} -->
+<!-- validation_data$predicted_knn_class <- predict(knn_model, newdata = validation_scaled_df, type = "class") -->
+<!-- validation_data$predicted_knn_prob <- predict(knn_model, newdata = validation_scaled_df, type = "prob")[, "Yes"] -->
 
-# Create ROC curve plot for k-NN
-roc_plot_knn <- ggroc(roc_obj_knn, legacy.axes = TRUE) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
-  theme_minimal() +
-  labs(x = "False Positive Rate", y = "True Positive Rate", title = "ROC Curve (k-NN)",
-       subtitle = paste("AUC =", round(auc(roc_obj_knn), 2)))
+<!-- # Calculate accuracy -->
+<!-- knn_accuracy <- mean(validation_data$predicted_knn_class == validation_data$Survived) -->
+<!-- knn_accuracy -->
 
-roc_plot_knn
-```
+<!-- ``` -->
+
+<!-- **3: Confusion Matrix** -->
+
+<!-- ```{r} -->
+<!-- # Create confusion matrix for k-NN model -->
+<!-- confusion_matrix_knn <- confusionMatrix(as.factor(validation_data$predicted_knn_class), as.factor(validation_data$Survived)) -->
+
+<!-- # Visualize the confusion matrix -->
+<!-- cm_plot_knn <- ggplot(data = as.data.frame(confusion_matrix_knn$table), aes(x = Reference, y = Prediction)) + -->
+<!--   geom_tile(aes(fill = log(Freq)), color = "white") + -->
+<!--   geom_text(aes(label = Freq), color = "white", fontface = "bold", size = 15) + -->
+<!--   scale_fill_gradient(low = "blue", high = "red") + -->
+<!--   theme_minimal() + -->
+<!--   theme(axis.title = element_text(size = 12), -->
+<!--         axis.text = element_text(size = 10)) + -->
+<!--   labs(x = "Actual", y = "Predicted", fill = "Log Frequency", title = "Confusion Matrix (k-NN)") -->
+
+<!-- cm_plot_knn -->
+<!-- ``` -->
+
+<!-- **4: ROC curve** -->
+
+<!-- ```{r} -->
+<!-- # Calculate the ROC curve for k-NN -->
+<!-- roc_obj_knn <- roc(validation_data$Survived, validation_data$predicted_knn_prob) -->
+
+<!-- # Create ROC curve plot for k-NN -->
+<!-- roc_plot_knn <- ggroc(roc_obj_knn, legacy.axes = TRUE) + -->
+<!--   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") + -->
+<!--   theme_minimal() + -->
+<!--   labs(x = "False Positive Rate", y = "True Positive Rate", title = "ROC Curve (k-NN)", -->
+<!--        subtitle = paste("AUC =", round(auc(roc_obj_knn), 2))) -->
+
+<!-- roc_plot_knn -->
+<!-- ``` -->

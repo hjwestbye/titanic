@@ -406,6 +406,61 @@ Number of Fisher Scoring iterations: 5</code></pre>
 <p><img src="titanic_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<!-- ### k-Nearest Neighbours (k-NN) -->
+<!-- **1: Fit the model** -->
+<!-- ```{r} -->
+<!-- # Scale and center the predictors -->
+<!-- train_scaled <- scale(train_data[, c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")]) -->
+<!-- validation_scaled <- scale(validation_data[, c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")], center = attr(train_scaled, "scaled:center"), scale = attr(train_scaled, "scaled:scale")) -->
+<!-- # Create data frames with named columns for the scaled training and test data -->
+<!-- train_scaled_df <- data.frame(Survived = train_data$Survived, train_scaled) -->
+<!-- colnames(train_scaled_df) <- c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked") -->
+<!-- validation_scaled_df <- data.frame(Survived = validation_data$Survived, validation_scaled) -->
+<!-- colnames(validation_scaled_df) <- c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked") -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- # Fit the k-NN model -->
+<!-- k <- 10 -->
+<!-- knn_model <- caret::knn3(Survived ~ ., data = train_scaled_df, k = k) -->
+<!-- # Display the model summary -->
+<!-- summary(knn_model) -->
+<!-- ``` -->
+<!-- **2: Make predictions and calculate accuracy** -->
+<!-- ```{r} -->
+<!-- validation_data$predicted_knn_class <- predict(knn_model, newdata = validation_scaled_df, type = "class") -->
+<!-- validation_data$predicted_knn_prob <- predict(knn_model, newdata = validation_scaled_df, type = "prob")[, "Yes"] -->
+<!-- # Calculate accuracy -->
+<!-- knn_accuracy <- mean(validation_data$predicted_knn_class == validation_data$Survived) -->
+<!-- knn_accuracy -->
+<!-- ``` -->
+<!-- **3: Confusion Matrix** -->
+<!-- ```{r} -->
+<!-- # Create confusion matrix for k-NN model -->
+<!-- confusion_matrix_knn <- confusionMatrix(as.factor(validation_data$predicted_knn_class), as.factor(validation_data$Survived)) -->
+<!-- # Visualize the confusion matrix -->
+
+<!-- cm_plot_knn <- ggplot(data = as.data.frame(confusion_matrix_knn$table), aes(x = Reference, y = Prediction)) + -->
+<!--   geom_tile(aes(fill = log(Freq)), color = "white") + -->
+<!--   geom_text(aes(label = Freq), color = "white", fontface = "bold", size = 15) + -->
+<!--   scale_fill_gradient(low = "blue", high = "red") + -->
+<!--   theme_minimal() + -->
+<!--   theme(axis.title = element_text(size = 12), -->
+<!--         axis.text = element_text(size = 10)) + -->
+<!--   labs(x = "Actual", y = "Predicted", fill = "Log Frequency", title = "Confusion Matrix (k-NN)") -->
+<!-- cm_plot_knn -->
+<!-- ``` -->
+<!-- **4: ROC curve** -->
+<!-- ```{r} -->
+<!-- # Calculate the ROC curve for k-NN -->
+<!-- roc_obj_knn <- roc(validation_data$Survived, validation_data$predicted_knn_prob) -->
+<!-- # Create ROC curve plot for k-NN -->
+<!-- roc_plot_knn <- ggroc(roc_obj_knn, legacy.axes = TRUE) + -->
+<!--   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") + -->
+<!--   theme_minimal() + -->
+<!--   labs(x = "False Positive Rate", y = "True Positive Rate", title = "ROC Curve (k-NN)", -->
+<!--        subtitle = paste("AUC =", round(auc(roc_obj_knn), 2))) -->
+<!-- roc_plot_knn -->
+<!-- ``` -->
 </section>
 </section>
 
